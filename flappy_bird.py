@@ -133,7 +133,7 @@ class Pipe():
     """
     WIN_HEIGHT = WIN_HEIGHT
     WIN_WIDTH = WIN_WIDTH
-    GAP = 200
+    GAP = 160
     VEL = 5
 
     def __init__(self, x):
