@@ -334,7 +334,7 @@ def main(win):
     run = True
     while run:
         pygame.time.delay(30)
-        clock.tick(60)
+        clock.tick(100)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
