@@ -3,7 +3,7 @@ The classic game of flappy bird. Made with python
 and pygame. Features pixel perfect collision using masks :o
 
 Date Modified:  Jul 30, 2019
-Author: Tech With Tim
+Author: Tech With Tim test
 """
 import pygame
 import random
