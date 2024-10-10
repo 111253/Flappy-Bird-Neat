@@ -6,6 +6,7 @@ Date Modified:  Jul 30, 2019
 Author: Tech With Tim test
 """
 import pygame
+import neat
 import random
 import os
 import time
@@ -13,7 +14,7 @@ pygame.font.init()  # init font
 
 WIN_WIDTH = 600
 WIN_HEIGHT = 800
-PIPE_VEL = 3
+PIPE_VEL = 5
 FLOOR = 730
 STAT_FONT = pygame.font.SysFont("comicsans", 50)
 END_FONT = pygame.font.SysFont("comicsans", 70)
@@ -387,3 +388,20 @@ def main(win):
     end_screen(WIN)
 
 main(WIN)
+
+def run(config_path):
+    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                         config_path)
+    p = neat.Population(config)
+    p.add_reporter(neat.StdOutReporter(True))
+    stats = neat.StatisticsReporter()
+    p.add_reporter(stats)
+    winner = p.run(eval_genomes, 50) #50 generations
+    print('\nBest genome:\n{!s}'.format(winner))
+
+
+if __name__ == '__main__':
+    local_dir = os.path.dirname(__file__) # zoek naar configforward.txt in dezelfde directory
+    config_path = os.path.join(local_dir, 'config-feedforward.txt')
+    run(config_path)
