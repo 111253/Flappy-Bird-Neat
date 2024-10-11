@@ -372,9 +372,11 @@ def eval_genomes(win, config):
                         pipe.passed = True
                         add_pipe = True
 
-                if add_pipe:
-                    score += 1
-                    pipes.append(Pipe(WIN_WIDTH))
+            if add_pipe:
+                score += 1
+                for genome in ge:
+                    genome.fitness += 5 # aanoedigen om door de pijpen heen te gaan
+                pipes.append(Pipe(WIN_WIDTH))
 
                 for r in rem:
                     pipes.remove(r)
