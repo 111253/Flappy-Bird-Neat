@@ -368,7 +368,7 @@ def eval_genomes(genomes, config):
                 pipe_ind = 1                                                                
 
         for x, bird in enumerate(birds):  # geven van fitness om overleven, runt elke frame
-            ge[x].fitness += 0.05
+            ge[x].fitness += 0.1
             bird.move()
 
         # doorgeven van postities pijpen aan bird en kiezen om te jumpen
