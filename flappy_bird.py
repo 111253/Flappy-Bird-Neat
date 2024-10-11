@@ -14,7 +14,7 @@ pygame.font.init()  # init font
 
 WIN_WIDTH = 600
 WIN_HEIGHT = 800
-PIPE_VEL = 3
+PIPE_VEL = 5
 FLOOR = 730
 STAT_FONT = pygame.font.SysFont("comicsans", 50)
 END_FONT = pygame.font.SysFont("comicsans", 70)
@@ -137,7 +137,7 @@ class Pipe():
     """
     WIN_HEIGHT = WIN_HEIGHT
     WIN_WIDTH = WIN_WIDTH
-    GAP = 200
+    GAP = 160
     VEL = 5
 
     def __init__(self, x):
