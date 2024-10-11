@@ -412,6 +412,6 @@ def run(config_file):
 
 if __name__ == '__eval_genome__':
     local_dir = os.path.dirname(__file__) # config laden vanuit locale directory
-    config_path = os.path.join(local_dir, 'config-feedforward.txt')
+    config_file = os.path.join(local_dir, 'config-feedforward.txt') # VERANDERD VAN PATH NAAR FILE
     run(config_file)
 
