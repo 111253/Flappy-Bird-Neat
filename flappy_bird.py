@@ -1,23 +1,26 @@
 """
-The classic game of flappy bird. Made with python
+The classic game of flappy bird. Make with python
 and pygame. Features pixel perfect collision using masks :o
 
 Date Modified:  Jul 30, 2019
 Author: Tech With Tim
+Estimated Work Time: 5 hours (1 just for that damn collision)
 """
 import pygame
 import random
-import neat
 import os
 import time
+import neat
+import visualize
+import pickle
 pygame.font.init()  # init font
 
 WIN_WIDTH = 600
 WIN_HEIGHT = 800
-PIPE_VEL = 3
 FLOOR = 730
 STAT_FONT = pygame.font.SysFont("comicsans", 50)
 END_FONT = pygame.font.SysFont("comicsans", 70)
+DRAW_LINES = False
 
 WIN = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 pygame.display.set_caption("Flappy Bird")
@@ -27,12 +30,12 @@ bg_img = pygame.transform.scale(pygame.image.load(os.path.join("imgs","bg.png"))
 bird_images = [pygame.transform.scale2x(pygame.image.load(os.path.join("imgs","bird" + str(x) + ".png"))) for x in range(1,4)]
 base_img = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs","base.png")).convert_alpha())
 
+gen = 0
+
 class Bird:
     """
     Bird class representing the flappy bird
     """
-    WIN_HEIGHT = 0
-    WIN_WIDTH = 0
     MAX_ROTATION = 25
     IMGS = bird_images
     ROT_VEL = 20
@@ -47,7 +50,6 @@ class Bird:
         """
         self.x = x
         self.y = y
-        self.gravity = 9.8
         self.tilt = 0  # degrees to tilt
         self.tick_count = 0
         self.vel = 0
@@ -132,8 +134,6 @@ class Pipe():
     """
     represents a pipe object
     """
-    WIN_HEIGHT = WIN_HEIGHT
-    WIN_WIDTH = WIN_WIDTH
     GAP = 200
     VEL = 5
 
@@ -146,7 +146,6 @@ class Pipe():
         """
         self.x = x
         self.height = 0
-        self.gap = 100  # gap between top and bottom pipe
 
         # where the top and bottom of the pipe is
         self.top = 0
@@ -212,7 +211,6 @@ class Base:
     Represnts the moving floor of the game
     """
     VEL = 5
-    WIN_WIDTH = WIN_WIDTH
     WIDTH = base_img.get_width()
     IMG = base_img
 
@@ -263,65 +261,82 @@ def blitRotateCenter(surf, image, topleft, angle):
 
     surf.blit(rotated_image, new_rect.topleft)
 
-def menu_screen(win):
+def draw_window(win, birds, pipes, base, score, gen, pipe_ind):
     """
-    the menu screen that will start the game
-    :param win: the pygame window surface
+    draws the windows for the main game loop
+    :param win: pygame window surface
+    :param bird: a Bird object
+    :param pipes: List of pipes
+    :param score: score of the game (int)
+    :param gen: current generation
+    :param pipe_ind: index of closest pipe
     :return: None
     """
-    pass
-
-def end_screen(win):
-    """
-    display an end screen when the player loses
-    :param win: the pygame window surface
-    :return: None
-    """
-    run = True
-    text_label = END_FONT.render("Press Space to Restart", 1, (255,255,255))
-    while run:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-
-            if event.type == pygame.KEYDOWN:
-                eval_genomes(win)
-
-        win.blit(text_label, (WIN_WIDTH/2 - text_label.get_width()/2, 500))
-        pygame.display.update()
-
-    pygame.quit()
-    quit()
-
-def draw_window(win, bird, pipes, base, score):
+    if gen == 0:
+        gen = 1
     win.blit(bg_img, (0,0))
 
     for pipe in pipes:
         pipe.draw(win)
 
     base.draw(win)
-    bird.draw(win)
+    for bird in birds:
+        # draw lines from bird to pipe
+        if DRAW_LINES:
+            try:
+                pygame.draw.line(win, (255,0,0), (bird.x+bird.img.get_width()/2, bird.y + bird.img.get_height()/2), (pipes[pipe_ind].x + pipes[pipe_ind].PIPE_TOP.get_width()/2, pipes[pipe_ind].height), 5)
+                pygame.draw.line(win, (255,0,0), (bird.x+bird.img.get_width()/2, bird.y + bird.img.get_height()/2), (pipes[pipe_ind].x + pipes[pipe_ind].PIPE_BOTTOM.get_width()/2, pipes[pipe_ind].bottom), 5)
+            except:
+                pass
+        # draw bird
+        bird.draw(win)
 
     # score
     score_label = STAT_FONT.render("Score: " + str(score),1,(255,255,255))
     win.blit(score_label, (WIN_WIDTH - score_label.get_width() - 15, 10))
 
+    # generations
+    score_label = STAT_FONT.render("Gens: " + str(gen-1),1,(255,255,255))
+    win.blit(score_label, (10, 10))
+
+    # alive
+    score_label = STAT_FONT.render("Alive: " + str(len(birds)),1,(255,255,255))
+    win.blit(score_label, (10, 50))
+
     pygame.display.update()
 
 
-def eval_genomes(win, config):
-    bird = Bird(230,350)
+def eval_genomes(genomes, config):
+    """
+    runs the simulation of the current population of
+    birds and sets their fitness based on the distance they
+    reach in the game.
+    """
+    global WIN, gen
+    win = WIN
+    gen += 1
+
+    # start by creating lists holding the genome itself, the
+    # neural network associated with the genome and the
+    # bird object that uses that network to play
+    nets = []
+    birds = []
+    ge = []
+    for genome_id, genome in genomes:
+        genome.fitness = 0  # start with fitness level of 0
+        net = neat.nn.FeedForwardNetwork.create(genome, config)
+        nets.append(net)
+        birds.append(Bird(230,350))
+        ge.append(genome)
+
     base = Base(FLOOR)
     pipes = [Pipe(700)]
     score = 0
 
     clock = pygame.time.Clock()
-    start = False
-    lost = False
 
     run = True
-    while run:
-        pygame.time.delay(30)
+    while run and len(birds) > 0:
         clock.tick(60)
 
         for event in pygame.event.get():
@@ -331,70 +346,96 @@ def eval_genomes(win, config):
                 quit()
                 break
 
-            if event.type == pygame.KEYDOWN and not lost:
-                if event.key == pygame.K_SPACE:
-                    if not start:
-                        start = True
-                    bird.jump()
+        pipe_ind = 0
+        if len(birds) > 0:
+            if len(pipes) > 1 and birds[0].x > pipes[0].x + pipes[0].PIPE_TOP.get_width():  # determine whether to use the first or second
+                pipe_ind = 1                                                                 # pipe on the screen for neural network input
 
-        # Move Bird, base and pipes
-        if start:
+        for x, bird in enumerate(birds):  # give each bird a fitness of 0.1 for each frame it stays alive
+            ge[x].fitness += 0.1
             bird.move()
-        if not lost:
-            base.move()
 
-            if start:
-                rem = []
-                add_pipe = False
-                for pipe in pipes:
-                    pipe.move()
-                    # check for collision
-                    if pipe.collide(bird, win):
-                        lost = True
+            # send bird location, top pipe location and bottom pipe location and determine from network whether to jump or not
+            output = nets[birds.index(bird)].activate((bird.y, abs(bird.y - pipes[pipe_ind].height), abs(bird.y - pipes[pipe_ind].bottom)))
 
-                    if pipe.x + pipe.PIPE_TOP.get_width() < 0:
-                        rem.append(pipe)
+            if output[0] > 0.5:  # we use a tanh activation function so result will be between -1 and 1. if over 0.5 jump
+                bird.jump()
 
-                    if not pipe.passed and pipe.x < bird.x:
-                        pipe.passed = True
-                        add_pipe = True
+        base.move()
 
-                if add_pipe:
-                    score += 1
-                    pipes.append(Pipe(WIN_WIDTH))
+        rem = []
+        add_pipe = False
+        for pipe in pipes:
+            pipe.move()
+            # check for collision
+            for bird in birds:
+                if pipe.collide(bird, win):
+                    ge[birds.index(bird)].fitness -= 1
+                    nets.pop(birds.index(bird))
+                    ge.pop(birds.index(bird))
+                    birds.pop(birds.index(bird))
 
-                for r in rem:
-                    pipes.remove(r)
+            if pipe.x + pipe.PIPE_TOP.get_width() < 0:
+                rem.append(pipe)
 
+            if not pipe.passed and pipe.x < bird.x:
+                pipe.passed = True
+                add_pipe = True
 
-        if bird.y + bird_images[0].get_height() - 10 >= FLOOR:
-            break
+        if add_pipe:
+            score += 1
+            # can add this line to give more reward for passing through a pipe (not required)
+            for genome in ge:
+                genome.fitness += 5
+            pipes.append(Pipe(WIN_WIDTH))
 
-        draw_window(WIN, bird, pipes, base, score)
+        for r in rem:
+            pipes.remove(r)
 
-    end_screen(WIN)
+        for bird in birds:
+            if bird.y + bird.img.get_height() - 10 >= FLOOR or bird.y < -50:
+                nets.pop(birds.index(bird))
+                ge.pop(birds.index(bird))
+                birds.pop(birds.index(bird))
 
-eval_genomes(WIN)
+        draw_window(WIN, birds, pipes, base, score, gen, pipe_ind)
+
+        # break if score gets large enough
+        '''if score > 20:
+            pickle.dump(nets[0],open("best.pickle", "wb"))
+            break'''
+
 
 def run(config_file):
+    """
+    runs the NEAT algorithm to train a neural network to play flappy bird.
+    :param config_file: location of config file
+    :return: None
+    """
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                         config_file) # config instellen
+                         config_file)
 
-    p = neat.Population(config) # zetten van populatie
+    # Create the population, which is the top-level object for a NEAT run.
+    p = neat.Population(config)
 
-    p.add_reporter(neat.StdOutReporter(True)) # statistieken in de terminal outputten
+    # Add a stdout reporter to show progress in the terminal.
+    p.add_reporter(neat.StdOutReporter(True))
     stats = neat.StatisticsReporter()
     p.add_reporter(stats)
     #p.add_reporter(neat.Checkpointer(5))
 
-    winner = p.run(eval_genomes, 5) # hoe vaak we de fitness function laten runnen / breeden
+    # Run for up to 50 generations.
+    winner = p.run(eval_genomes, 5)
 
+    # show final stats
     print('\nBest genome:\n{!s}'.format(winner))
 
 
-if __name__ == '__eval_genome__':
-    local_dir = os.path.dirname(__file__) # config laden vanuit locale directory
+if __name__ == '__main__':
+    # Determine path to configuration file. This path manipulation is
+    # here so that the script will run successfully regardless of the
+    # current working directory.
+    local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, 'config-feedforward.txt')
-    run(config_file)
-
+    run(config_path)
