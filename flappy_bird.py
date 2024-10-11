@@ -3,10 +3,9 @@ The classic game of flappy bird. Made with python
 and pygame. Features pixel perfect collision using masks :o
 
 Date Modified:  Jul 30, 2019
-Author: Tech With Tim test
+Author: Tech With Tim
 """
 import pygame
-import neat
 import random
 import os
 import time
@@ -14,7 +13,7 @@ pygame.font.init()  # init font
 
 WIN_WIDTH = 600
 WIN_HEIGHT = 800
-PIPE_VEL = 5
+PIPE_VEL = 3
 FLOOR = 730
 STAT_FONT = pygame.font.SysFont("comicsans", 50)
 END_FONT = pygame.font.SysFont("comicsans", 70)
@@ -134,7 +133,7 @@ class Pipe():
     """
     WIN_HEIGHT = WIN_HEIGHT
     WIN_WIDTH = WIN_WIDTH
-    GAP = 160
+    GAP = 200
     VEL = 5
 
     def __init__(self, x):
@@ -317,29 +316,25 @@ def draw_window(win, bird, pipes, base, score):
     pygame.display.update()
 
 
-def main(genomes, config): 
-    global WIN, gen
-    win = WIN
-    gen += 1
-    nets = []
-    birds = [] #lists for birds
-    ge = []
-    for genome_id, genome in genomes:
-        genome.fitness = 0  # start with fitness level of 0
-        net = neat.nn.FeedForwardNetwork.create(genome, config)
-        nets.append(net)
-        birds.append(Bird(230,350))
-        ge.append(genome)
-
+def main(win):
+    """
+    Runs the main game loop
+    :param win: pygame window surface
+    :return: None
+    """
+    bird = Bird(230,350)
     base = Base(FLOOR)
     pipes = [Pipe(700)]
     score = 0
 
     clock = pygame.time.Clock()
+    start = False
+    lost = False
 
     run = True
-    while run and len(birds) > 0:
-        clock.tick(100)
+    while run:
+        pygame.time.delay(30)
+        clock.tick(60)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -348,66 +343,47 @@ def main(genomes, config):
                 quit()
                 break
 
-        pipe_ind = 0
-        if len(birds) > 0:
-            if len(pipes) > 1 and birds[0].x > pipes[0].x + pipes[0].PIPE_TOP.get_width():  # eerste of tweede pijp in het scherm
-                pipe_ind = 1                                                              
+            if event.type == pygame.KEYDOWN and not lost:
+                if event.key == pygame.K_SPACE:
+                    if not start:
+                        start = True
+                    bird.jump()
 
-        for x, bird in enumerate(birds):  # andere fitness additie voor overleven, een bird die tijdens een tussenstuk blijf leven doet het ook beter dan een die tot de grond valt
-            ge[x].fitness += 0.1
+        # Move Bird, base and pipes
+        if start:
             bird.move()
-        base.move()
+        if not lost:
+            base.move()
 
-        rem = []
-        add_pipe = False
-        for pipe in pipes:
-            pipe.move()
-            # check for collision
-            for bird in birds:
-                if pipe.collide(bird, win):
-                    ge[birds.index(bird)].fitness -= 1
-                    nets.pop(birds.index(bird)) # dode birds weghalen
-                    ge.pop(birds.index(bird)) # dode birds weghalen
-                    birds.pop(birds.index(bird)) # dode birds weghalen
+            if start:
+                rem = []
+                add_pipe = False
+                for pipe in pipes:
+                    pipe.move()
+                    # check for collision
+                    if pipe.collide(bird, win):
+                        lost = True
 
-            if pipe.x + pipe.PIPE_TOP.get_width() < 0:
-                rem.append(pipe)
+                    if pipe.x + pipe.PIPE_TOP.get_width() < 0:
+                        rem.append(pipe)
 
-            if not pipe.passed and pipe.x < bird.x:
-                pipe.passed = True
-                add_pipe = True
+                    if not pipe.passed and pipe.x < bird.x:
+                        pipe.passed = True
+                        add_pipe = True
 
-        if add_pipe:
-            score += 5 # bird score verhogen voor door pijpen heen te gaan
-            for genome in ge:
-                genome.fitness += 5
-            pipes.append(Pipe(WIN_WIDTH))
+                if add_pipe:
+                    score += 1
+                    pipes.append(Pipe(WIN_WIDTH))
 
-        for r in rem:
-            pipes.remove(r)
-
-        for bird in birds:
-            if bird.y + bird.img.get_height() - 10 >= FLOOR or bird.y < -50:
-                nets.pop(birds.index(bird))
-                ge.pop(birds.index(bird))
-                birds.pop(birds.index(bird))
-
-        draw_window(WIN, birds, pipes, base, score, gen, pipe_ind)
+                for r in rem:
+                    pipes.remove(r)
 
 
-def run(config_path):
-    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                         config_path)
-    p = neat.Population(config)
-    p.add_reporter(neat.StdOutReporter(True))
-    stats = neat.StatisticsReporter()
-    p.add_reporter(stats)
-    winner = p.run(main, 50) #50 generations
-    print('\nBest genome:\n{!s}'.format(winner))
+        if bird.y + bird_images[0].get_height() - 10 >= FLOOR:
+            break
 
+        draw_window(WIN, bird, pipes, base, score)
 
-if __name__ == '__main__':
-    local_dir = os.path.dirname(__file__) # zoek naar configforward.txt in dezelfde directory
-    config_path = os.path.join(local_dir, 'config-feedforward.txt')
-    run(config_path)
+    end_screen(WIN)
+
+main(WIN)
