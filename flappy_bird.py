@@ -353,6 +353,11 @@ def eval_genomes(win, config):
         if not lost:
             base.move()
 
+        pipe_ind = 0
+        if len(birds) > 0:
+            if len(pipes) > 1 and birds[0].x > pipes[0].x + pipes[0].PIPE_TOP.get_width():  # checken van pipes om ervoor te zorgen dat de juiste gebruikt wordt
+                pipe_ind = 1                                                                
+
             if start:
                 rem = []
                 add_pipe = False
