@@ -431,7 +431,7 @@ def run(config_path):
     p.add_reporter(stats)
     #p.add_reporter(neat.Checkpointer(5))
 
-    winner = p.run(eval_genomes, 5) # hoe vaak we de fitness function laten runnen / breeden
+    winner = p.run(eval_genomes, 10) # hoe vaak we de fitness function laten runnen / breeden
 
     print('\nBest genome:\n{!s}'.format(winner))
 
