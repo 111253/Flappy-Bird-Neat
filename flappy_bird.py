@@ -311,6 +311,16 @@ def draw_window(win, bird, pipes, base, score):
 
 def eval_genomes(win, config):
     birds = [] # allow multiple birbs
+    nets = [] # MEER BIRDS, geen nummering nodig
+    ge = [] # MEER BIRDS
+
+    for genome_id, genome in genomes: # opzetten neural network
+        genome.fitness = 0  
+        net = neat.nn.FeedForwardNetwork.create(genome, config)
+        nets.append(net)
+        birds.append(Bird(230,350))
+        ge.append(genome) 
+    
     base = Base(FLOOR)
     pipes = [Pipe(700)]
     score = 0
