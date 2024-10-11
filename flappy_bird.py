@@ -388,8 +388,23 @@ def main(win):
 
 main(WIN)
 
-
 if __name__ == '__main__':
     local_dir = os.path.dirname(__file__) # config laden vanuit locale directory
     config_path = os.path.join(local_dir, 'config-feedforward.txt')
-    run(config_path)
+    run(config_file)
+
+def run(config_file):
+    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                         config_file) # config instellen
+
+    p = neat.Population(config) # zetten van populatie
+
+    p.add_reporter(neat.StdOutReporter(True)) # statistieken in de terminal outputten
+    stats = neat.StatisticsReporter()
+    p.add_reporter(stats)
+    #p.add_reporter(neat.Checkpointer(5))
+
+    winner = p.run(eval_genomes, 5) # hoe vaak we de fitness function laten runnen / breeden
+
+    print('\nBest genome:\n{!s}'.format(winner))
