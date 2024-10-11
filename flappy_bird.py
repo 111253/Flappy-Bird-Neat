@@ -387,3 +387,9 @@ def main(win):
     end_screen(WIN)
 
 main(WIN)
+
+
+if __name__ == '__main__':
+    local_dir = os.path.dirname(__file__) # config laden vanuit locale directory
+    config_path = os.path.join(local_dir, 'config-feedforward.txt')
+    run(config_path)
