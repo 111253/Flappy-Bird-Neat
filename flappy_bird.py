@@ -368,7 +368,7 @@ def eval_genomes(genomes, config):
                 pipe_ind = 1                                                                
 
         for x, bird in enumerate(birds):  # geven van fitness om overleven, runt elke frame
-            ge[x].fitness += 0.1
+            ge[x].fitness += 0.05
             bird.move()
 
         # doorgeven van postities pijpen aan bird en kiezen om te jumpen
@@ -431,7 +431,7 @@ def run(config_path):
     p.add_reporter(stats)
     #p.add_reporter(neat.Checkpointer(5))
 
-    winner = p.run(eval_genomes, 10) # hoe vaak we de fitness function laten runnen / breeden
+    winner = p.run(eval_genomes, 25) # hoe vaak we de fitness function laten runnen / breeden
 
     print('\nBest genome:\n{!s}'.format(winner))
 
