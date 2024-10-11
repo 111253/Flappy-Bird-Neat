@@ -365,7 +365,10 @@ def eval_genomes(win, config):
 
                 for r in rem:
                     pipes.remove(r)
-
+                    
+            for bird in birds:
+                if bird.y + bird.img.get_height() - 10 >= FLOOR or bird.y < -50:
+                    pass
 
         if birds.y + bird_images[0].get_height() - 10 >= FLOOR:
             break
