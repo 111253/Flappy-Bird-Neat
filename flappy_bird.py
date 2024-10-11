@@ -359,8 +359,11 @@ def eval_genomes(win, config):
                 for pipe in pipes:
                     pipe.move()
                     # check for collision
-                    if pipe.collide(birds, win):
-                        lost = True
+                if pipe.collide(bird, win):
+                    ge[birds.index(bird)].fitness -= 1
+                    nets.pop(birds.index(bird)) # doodmaken van birds
+                    ge.pop(birds.index(bird)) # doodmaken van birds 
+                    birds.pop(birds.index(bird)) # doodmaken van birds
 
                     if pipe.x + pipe.PIPE_TOP.get_width() < 0:
                         rem.append(pipe)
