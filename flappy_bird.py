@@ -309,7 +309,10 @@ def draw_window(win, bird, pipes, base, score):
     pygame.display.update()
 
 
-def eval_genomes(win, config):
+def eval_genomes(genomes, config):
+    global WIN, gen
+    win = WIN
+    gen += 1
     birds = [] # allow multiple birbs
     nets = [] # MEER BIRDS, geen nummering nodig
     ge = [] # MEER BIRDS
@@ -357,6 +360,10 @@ def eval_genomes(win, config):
         if len(birds) > 0:
             if len(pipes) > 1 and birds[0].x > pipes[0].x + pipes[0].PIPE_TOP.get_width():  # checken van pipes om ervoor te zorgen dat de juiste gebruikt wordt
                 pipe_ind = 1                                                                
+
+        for x, bird in enumerate(birds):  # geven van fitness om overleven
+            ge[x].fitness += 0.1
+            bird.move()
 
             if start:
                 rem = []
