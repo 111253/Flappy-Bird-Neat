@@ -7,6 +7,7 @@ Author: Tech With Tim
 """
 import pygame
 import random
+import neat
 import os
 import time
 pygame.font.init()  # init font
