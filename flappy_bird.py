@@ -399,7 +399,7 @@ def eval_genomes(genomes, config):
                     pipes.remove(r)
                     
             for bird in birds:
-                if bird.y + bird.img.get_height() - 10 >= FLOOR or bird.y < -50:
+                if bird.y + bird.img.get_height() - 10 >= FLOOR or bird.y < -50: # -50 in plaats van tutorial 0, zie neat voorbeeld
                     nets.pop(birds.index(bird)) # meer doodmaken van birds
                     ge.pop(birds.index(bird))  # meer doodmaken van birds
                     birds.pop(birds.index(bird))  # meer doodmaken van birds
