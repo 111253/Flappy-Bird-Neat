@@ -335,29 +335,25 @@ def eval_genomes(genomes, config):
     global WIN, gen
     win = WIN
     gen += 1
+    nets = [] # allow multiple birbs
     birds = [] # allow multiple birbs
-    nets = [] # MEER BIRDS, geen nummering nodig
-    ge = [] # MEER BIRDS
-
-    for genome_id, genome in genomes: # opzetten neural network
-        genome.fitness = 0  
+    ge = [] # allow multiple birbs
+    for genome_id, genome in genomes:
+        genome.fitness = 0  # start with fitness level of 0
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         nets.append(net)
         birds.append(Bird(230,350))
-        ge.append(genome) 
-    
+        ge.append(genome)
+
     base = Base(FLOOR)
     pipes = [Pipe(700)]
     score = 0
 
     clock = pygame.time.Clock()
-    start = False
-    lost = False
 
     run = True
-    while run:
-        pygame.time.delay(30)
-        clock.tick(60)
+    while run and len(birds) > 0:
+        clock.tick(100)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -365,18 +361,6 @@ def eval_genomes(genomes, config):
                 pygame.quit()
                 quit()
                 break
-
-            if event.type == pygame.KEYDOWN and not lost:
-                if event.key == pygame.K_SPACE:
-                    if not start:
-                        start = True
-                    birds.jump()
-
-        # Move Bird, base and pipes
-        if start:
-            birds.move()
-        if not lost:
-            base.move()
 
         pipe_ind = 0
         if len(birds) > 0:
@@ -387,47 +371,53 @@ def eval_genomes(genomes, config):
             ge[x].fitness += 0.1
             bird.move()
 
+        # doorgeven van postities pijpen aan bird en kiezen om te jumpen
             output = nets[birds.index(bird)].activate((bird.y, abs(bird.y - pipes[pipe_ind].height), abs(bird.y - pipes[pipe_ind].bottom)))
 
-            if output[0] > 0.5:  # doorgeven van postities pijpen aan bird en kiezen om te jumpen
+            if output[0] > 0.5:  # we use a tanh activation function so result will be between -1 and 1. if over 0.5 jump
                 bird.jump()
 
-            if start:
-                rem = []
-                add_pipe = False
-                for pipe in pipes:
-                    pipe.move()
-                    # check for collision
+        base.move()
+
+        rem = []
+        add_pipe = False
+        for pipe in pipes:
+            pipe.move()
+
+            for bird in birds:
                 if pipe.collide(bird, win):
                     ge[birds.index(bird)].fitness -= 1
-                    nets.pop(birds.index(bird)) # doodmaken van birds
-                    ge.pop(birds.index(bird)) # doodmaken van birds 
-                    birds.pop(birds.index(bird)) # doodmaken van birds
+                    nets.pop(birds.index(bird))  # doodmaken van birds
+                    ge.pop(birds.index(bird))  # doodmaken van birds
+                    birds.pop(birds.index(bird)) # doodmaken van birds 
 
-                    if pipe.x + pipe.PIPE_TOP.get_width() < 0:
-                        rem.append(pipe)
+            if pipe.x + pipe.PIPE_TOP.get_width() < 0:
+                rem.append(pipe)
 
-                    if not pipe.passed and pipe.x < birds.x:
-                        pipe.passed = True
-                        add_pipe = True
+            if not pipe.passed and pipe.x < bird.x:
+                pipe.passed = True
+                add_pipe = True
 
-            if add_pipe:
-                score += 1
-                for genome in ge:
-                    genome.fitness += 5 # aanoedigen om door de pijpen heen te gaan
-                pipes.append(Pipe(WIN_WIDTH))
+        if add_pipe:
+            score += 1 # meer rewards om door een pipe heen te gaan
+            for genome in ge:
+                genome.fitness += 5
+            pipes.append(Pipe(WIN_WIDTH))
 
-                for r in rem:
-                    pipes.remove(r)
-                    
-            for bird in birds:
-                if bird.y + bird.img.get_height() - 10 >= FLOOR or bird.y < -50: # -50 in plaats van tutorial 0, zie neat voorbeeld
-                    nets.pop(birds.index(bird)) # meer doodmaken van birds
-                    ge.pop(birds.index(bird))  # meer doodmaken van birds
-                    birds.pop(birds.index(bird))  # meer doodmaken van birds
+        for r in rem:
+            pipes.remove(r)
 
-        draw_window(WIN, birds, pipes, base, score)
+        for bird in birds:
+            if bird.y + bird.img.get_height() - 10 >= FLOOR or bird.y < -50:
+                nets.pop(birds.index(bird))  # doodmaken van birds
+                ge.pop(birds.index(bird))  # doodmaken van birds
+                birds.pop(birds.index(bird)) # doodmaken van birds
 
+        draw_window(WIN, birds, pipes, base, score, gen, pipe_ind)
+
+        '''if score > 20:
+            pickle.dump(nets[0],open("best.pickle", "wb"))
+            break'''
 
 def run(config_path):
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
