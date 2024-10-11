@@ -383,7 +383,9 @@ def eval_genomes(win, config):
                     
             for bird in birds:
                 if bird.y + bird.img.get_height() - 10 >= FLOOR or bird.y < -50:
-                    pass
+                    nets.pop(birds.index(bird)) # meer doodmaken van birds
+                    ge.pop(birds.index(bird))  # meer doodmaken van birds
+                    birds.pop(birds.index(bird))  # meer doodmaken van birds
 
         draw_window(WIN, birds, pipes, base, score)
 
