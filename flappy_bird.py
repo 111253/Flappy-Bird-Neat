@@ -18,6 +18,7 @@ PIPE_VEL = 3
 FLOOR = 730
 STAT_FONT = pygame.font.SysFont("comicsans", 50)
 END_FONT = pygame.font.SysFont("comicsans", 70)
+DRAW_LINES = False
 
 WIN = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
 pygame.display.set_caption("Flappy Bird")
@@ -26,6 +27,8 @@ pipe_img = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs","pipe.
 bg_img = pygame.transform.scale(pygame.image.load(os.path.join("imgs","bg.png")).convert_alpha(), (600, 900))
 bird_images = [pygame.transform.scale2x(pygame.image.load(os.path.join("imgs","bird" + str(x) + ".png"))) for x in range(1,4)]
 base_img = pygame.transform.scale2x(pygame.image.load(os.path.join("imgs","base.png")).convert_alpha())
+
+gen = 0
 
 class Bird:
     """
@@ -293,18 +296,37 @@ def end_screen(win):
     pygame.quit()
     quit()
 
-def draw_window(win, bird, pipes, base, score):
+def draw_window(win, birds, pipes, base, score, gen, pipe_ind):
+    if gen == 0:
+        gen = 1
     win.blit(bg_img, (0,0))
 
     for pipe in pipes:
         pipe.draw(win)
 
     base.draw(win)
-    bird.draw(win)
+    for bird in birds:
+        # draw lines from bird to pipe
+        if DRAW_LINES:
+            try:
+                pygame.draw.line(win, (255,0,0), (bird.x+bird.img.get_width()/2, bird.y + bird.img.get_height()/2), (pipes[pipe_ind].x + pipes[pipe_ind].PIPE_TOP.get_width()/2, pipes[pipe_ind].height), 5)
+                pygame.draw.line(win, (255,0,0), (bird.x+bird.img.get_width()/2, bird.y + bird.img.get_height()/2), (pipes[pipe_ind].x + pipes[pipe_ind].PIPE_BOTTOM.get_width()/2, pipes[pipe_ind].bottom), 5)
+            except:
+                pass
+        # draw bird
+        bird.draw(win)
 
     # score
     score_label = STAT_FONT.render("Score: " + str(score),1,(255,255,255))
     win.blit(score_label, (WIN_WIDTH - score_label.get_width() - 15, 10))
+
+    # generations
+    score_label = STAT_FONT.render("Gens: " + str(gen-1),1,(255,255,255))
+    win.blit(score_label, (10, 10))
+
+    # alive
+    score_label = STAT_FONT.render("Alive: " + str(len(birds)),1,(255,255,255))
+    win.blit(score_label, (10, 50))
 
     pygame.display.update()
 
@@ -406,14 +428,11 @@ def eval_genomes(genomes, config):
 
         draw_window(WIN, birds, pipes, base, score)
 
-    end_screen(WIN)
 
-eval_genomes(WIN)
-
-def run(config_file):
+def run(config_path):
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                         config_file) # config instellen
+                         config_path) # config instellen
 
     p = neat.Population(config) # zetten van populatie
 
@@ -429,6 +448,6 @@ def run(config_file):
 
 if __name__ == '__main__':
     local_dir = os.path.dirname(__file__) # config laden vanuit locale directory
-    config_file = os.path.join(local_dir, 'config-feedforward.txt') # VERANDERD VAN PATH NAAR FILE
-    run(config_file)
+    config_path = os.path.join(local_dir, 'config-feedforward.txt') # VERANDERD VAN PATH NAAR FILE
+    run(config_path)
 
