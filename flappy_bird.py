@@ -285,7 +285,7 @@ def end_screen(win):
                 run = False
 
             if event.type == pygame.KEYDOWN:
-                main(win)
+                eval_genomes(win)
 
         win.blit(text_label, (WIN_WIDTH/2 - text_label.get_width()/2, 500))
         pygame.display.update()
@@ -294,14 +294,6 @@ def end_screen(win):
     quit()
 
 def draw_window(win, bird, pipes, base, score):
-    """
-    draws the windows for the main game loop
-    :param win: pygame window surface
-    :param bird: a Bird object
-    :param pipes: List of pipes
-    :param score: score of the game (int)
-    :return: None
-    """
     win.blit(bg_img, (0,0))
 
     for pipe in pipes:
@@ -317,12 +309,7 @@ def draw_window(win, bird, pipes, base, score):
     pygame.display.update()
 
 
-def main(win):
-    """
-    Runs the main game loop
-    :param win: pygame window surface
-    :return: None
-    """
+def eval_genomes(win, config):
     bird = Bird(230,350)
     base = Base(FLOOR)
     pipes = [Pipe(700)]
@@ -387,12 +374,7 @@ def main(win):
 
     end_screen(WIN)
 
-main(WIN)
-
-if __name__ == '__main__':
-    local_dir = os.path.dirname(__file__) # config laden vanuit locale directory
-    config_path = os.path.join(local_dir, 'config-feedforward.txt')
-    run(config_file)
+eval_genomes(WIN)
 
 def run(config_file):
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -409,3 +391,10 @@ def run(config_file):
     winner = p.run(eval_genomes, 5) # hoe vaak we de fitness function laten runnen / breeden
 
     print('\nBest genome:\n{!s}'.format(winner))
+
+
+if __name__ == '__eval_genome__':
+    local_dir = os.path.dirname(__file__) # config laden vanuit locale directory
+    config_path = os.path.join(local_dir, 'config-feedforward.txt')
+    run(config_file)
+
