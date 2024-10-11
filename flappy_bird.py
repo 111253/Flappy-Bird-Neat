@@ -361,9 +361,14 @@ def eval_genomes(genomes, config):
             if len(pipes) > 1 and birds[0].x > pipes[0].x + pipes[0].PIPE_TOP.get_width():  # checken van pipes om ervoor te zorgen dat de juiste gebruikt wordt
                 pipe_ind = 1                                                                
 
-        for x, bird in enumerate(birds):  # geven van fitness om overleven
+        for x, bird in enumerate(birds):  # geven van fitness om overleven, runt elke frame
             ge[x].fitness += 0.1
             bird.move()
+
+            output = nets[birds.index(bird)].activate((bird.y, abs(bird.y - pipes[pipe_ind].height), abs(bird.y - pipes[pipe_ind].bottom)))
+
+            if output[0] > 0.5:  # doorgeven van postities pijpen aan bird en kiezen om te jumpen
+                bird.jump()
 
             if start:
                 rem = []
@@ -422,7 +427,7 @@ def run(config_file):
     print('\nBest genome:\n{!s}'.format(winner))
 
 
-if __name__ == '__eval_genome__':
+if __name__ == '__main__':
     local_dir = os.path.dirname(__file__) # config laden vanuit locale directory
     config_file = os.path.join(local_dir, 'config-feedforward.txt') # VERANDERD VAN PATH NAAR FILE
     run(config_file)
