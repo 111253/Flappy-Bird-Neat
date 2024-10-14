@@ -138,8 +138,8 @@ class Pipe():
     """
     WIN_HEIGHT = WIN_HEIGHT
     WIN_WIDTH = WIN_WIDTH
-    GAP = 160
-    VEL = 5
+    GAP = 160 # 160 zoals in de opracht
+    VEL = 5 # 5 zoals in de opdracht
 
     def __init__(self, x):
         """
@@ -359,7 +359,7 @@ def eval_genomes(genomes, config):
 
     run = True
     while run and len(birds) > 0:
-        clock.tick(100)
+        clock.tick(100) # framerate aangepast tot 100
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
