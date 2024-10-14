@@ -10,6 +10,7 @@ import random
 import neat
 import os
 import time
+import pickle
 pygame.font.init()  # init font
 
 WIN_WIDTH = 600
@@ -345,6 +346,11 @@ def eval_genomes(genomes, config):
         birds.append(Bird(230,350))
         ge.append(genome)
 
+  #  with open('best.pickle', 'rb') as handle:
+  #      net=pickle.load(handle)
+  #  nets.append(net)
+  #  birds.append(Bird(230,350))
+
     base = Base(FLOOR)
     pipes = [Pipe(700)]
     score = 0
@@ -415,9 +421,9 @@ def eval_genomes(genomes, config):
 
         draw_window(WIN, birds, pipes, base, score, gen, pipe_ind)
 
-        '''if score > 20:
+        if score > 25:
             pickle.dump(nets[0],open("best.pickle", "wb"))
-            break'''
+            break
 
 def run(config_path):
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -440,4 +446,3 @@ if __name__ == '__main__':
     local_dir = os.path.dirname(__file__) # config laden vanuit locale directory
     config_path = os.path.join(local_dir, 'config-feedforward.txt') # VERANDERD VAN PATH NAAR FILE
     run(config_path)
-
